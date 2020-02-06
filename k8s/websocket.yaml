@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: r-socket-websocket
+  labels:
+    app: r-socket-websocket
+spec:
+  replicas: 3
+  template:
+    metadata:
+      name: r-socket-websocket
+      labels:
+        app: r-socket-websocket
+    spec:
+      containers:
+        - name: r-socket-websocket
+          image: daggerok/reactive-spring-k8s-r-socket-websocket
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: R2DBC_HOST
+              value: r-socket-r2dbc
+          ports:
+            - containerPort: 8002
+              name: websocket
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: websocket
+            periodSeconds: 2
+            timeoutSeconds: 99
+            failureThreshold: 3
+            initialDelaySeconds: 1
+          livenessProbe:
+            tcpSocket:
+              port: websocket
+            periodSeconds: 5
+            timeoutSeconds: 99
+            failureThreshold: 6
+            initialDelaySeconds: 4
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: r-socket-websocket
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: r-socket-websocket
+spec:
+  selector:
+    app: r-socket-websocket
+  ports:
+    - port: 8002
+      protocol: TCP
+      nodePort: 30002
+      name: websocket
+      targetPort: 8002
+  type: NodePort

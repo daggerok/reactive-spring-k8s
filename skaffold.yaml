@@ -1,0 +1,41 @@
+apiVersion: skaffold/v1
+kind: Config
+metadata:
+  name: reactive-spring-k8s
+build:
+  artifacts:
+    - image: daggerok/reactive-spring-k8s-r-socket-r2dbc
+      jib:
+        project: r-socket-r2dbc
+        type: maven
+#        args:
+#          - package
+#          #- jib:dockerBuild
+#      sync:
+#        infer:
+#          - src/**/*.*
+    - image: daggerok/reactive-spring-k8s-r-socket-websocket
+      jib:
+        project: r-socket-websocket
+        type: maven
+#        args:
+#          - resources:resources
+#          - package
+#          - jib:dockerBuild
+#      sync:
+#        infer:
+#          - src/**/*.*
+    - image: daggerok/reactive-spring-k8s-r-socket-webflux
+      jib:
+        project: r-socket-webflux
+        type: maven
+#        args:
+#          #- jib:dockerBuild
+#      sync:
+#        infer:
+#          - src/**/*.*
+deploy:
+  kubectl:
+    manifests:
+      - k8s/*.yaml
+#      #- k8s/ingress/nginx/docker-for-mac/*.yaml

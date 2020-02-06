@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: r-socket-webflux
+  labels:
+    app: r-socket-webflux
+spec:
+  replicas: 2
+  template:
+    metadata:
+      name: r-socket-webflux
+      labels:
+        app: r-socket-webflux
+    spec:
+      containers:
+        - name: r-socket-webflux
+          image: daggerok/reactive-spring-k8s-r-socket-webflux
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: webflux
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: webflux
+            periodSeconds: 2
+            timeoutSeconds: 99
+            failureThreshold: 3
+            initialDelaySeconds: 1
+          livenessProbe:
+            tcpSocket:
+              port: webflux
+            periodSeconds: 5
+            timeoutSeconds: 99
+            failureThreshold: 6
+            initialDelaySeconds: 4
+          env:
+            - name: WEBSOCKET_HOST
+              value: r-socket-websocket
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: r-socket-webflux
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: r-socket-webflux
+spec:
+  selector:
+    app: r-socket-webflux
+  ports:
+    - port: 8080
+      name: webflux
+      protocol: TCP
+      nodePort: 30080
+      targetPort: 8080
+  type: NodePort

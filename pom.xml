@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.2.4.RELEASE</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.example</groupId>
+    <artifactId>reactive-spring-k8s</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>r-socket-r2dbc</module>
+        <module>r-socket-websocket</module>
+        <module>r-socket-webflux</module>
+    </modules>
+
+    <properties>
+        <java.version>1.8</java.version>
+        <!--<java.version>11</java.version>-->
+        <r2dbc.version>0.1.0.M3</r2dbc.version>
+        <docker-repository>daggerok</docker-repository>
+        <jib-maven-plugin.version>1.8.0</jib-maven-plugin.version>
+        <!-- seems like not 2.0.0 is quite buggy or just don't work like expected...
+        <jib-maven-plugin.version>2.0.0</jib-maven-plugin.version> -->
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot.experimental</groupId>
+                <artifactId>spring-boot-bom-r2dbc</artifactId>
+                <version>${r2dbc.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <defaultGoal>package jib:dockerBuild</defaultGoal>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <configuration>
+                        <executable>true</executable>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>build-info</id>
+                            <phase>package</phase>
+                            <goals><goal>build-info</goal></goals>
+                        </execution>
+                        <execution>
+                            <id>repackage</id>
+                            <phase>package</phase>
+                            <goals><goal>repackage</goal></goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>${jib-maven-plugin.version}</version>
+                <configuration>
+                    <!-- start:fatJar - just remove that and use default jib! -->
+                    <containerizingMode>packaged</containerizingMode>
+                    <container>
+                        <appRoot>/tmp</appRoot>
+                        <useCurrentTimestamp>true</useCurrentTimestamp>
+                        <entrypoint>
+                            <shell>ash</shell>
+                            <option>-c</option>
+                            <arg>java -jar /tmp/classpath/*.jar</arg>
+                        </entrypoint>
+                    </container>
+                    <!-- end:fatJar -->
+                    <from>
+                        <image>openjdk:8u212-jre-alpine3.9</image>
+                    </from>
+                    <to>
+                        <image>${docker-repository}/${project.parent.artifactId}-${project.artifactId}</image>
+                        <tags>
+                            <tag>${project.version}</tag>
+                            <tag>latest</tag>
+                        </tags>
+                    </to>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+        </repository>
+    </repositories>
+
+</project>
